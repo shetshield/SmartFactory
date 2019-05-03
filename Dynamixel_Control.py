@@ -1,4 +1,5 @@
 #%%
+# 설치가 필요한 Package: serial, PyQt5, opencv << anaconda 이용하여 설치
 # Control Panel
 from PyQt5 import QtWidgets, QtGui, QtCore
 from math  import sin, cos, radians, asin, degrees, sqrt
@@ -924,9 +925,12 @@ def main() :
 
 if __name__ == "__main__" :
     main()
+
+    
 #%%
 """
-    1회 테스트를 진행하는 섹션
+    통신 테스트 섹션
+    1회만 데이터를 주고 받아서 간단히 확인함
 """
 HOST = '192.168.0.100'
 PORT = 30000
