@@ -160,10 +160,10 @@ else :
     COM  = 'COM6'
 
 os.sys.path.append(wdir)
-import SMF_2nd_UI_R4
-from grid_world import negative_grid, standard_grid
+import SMF_2nd_UI
+# from grid_world import negative_grid, standard_grid # 그리드 형태 강화학습 적용
 
-class XDialog(QtWidgets.QDialog, SMF_2nd_UI_R4.Ui_Dialog) :
+class XDialog(QtWidgets.QDialog, SMF_2nd_UI.Ui_Dialog) :
     def __init__(self):
         QtWidgets.QDialog.__init__(self)
         # setupUi() method shows dialog in display
