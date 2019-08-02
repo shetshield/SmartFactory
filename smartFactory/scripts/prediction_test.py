@@ -27,22 +27,26 @@ class ANN_model(models.Sequential) :
 		self.add(layers.Dense(Nh, activation='relu', input_shape=(Nin,)))
 		self.add(layers.Dense(Nout, activation='softmax'))
 		self.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-def train() :
+def train(_Nh) :
 	Nin     = 784
-	Nh      = 64
+	Nh      = _Nh
 	Nout    = 10 # Number of class
 	num_epo = 10
-	model   = ANN_model(Nin, Nh, Nout)
+	model1  = ANN_model(Nin, Nh, Nout)
+	model2  = ANN_model(Nin, int(Nh/8)+4, Nout)
 	(X_train, Y_train), (X_test, Y_test) = data_preprocessing()
-	history = model.fit(X_train, Y_train, epochs = num_epo, batch_size = 64, validation_split=0.2)
-	perf_test = model.evaluate(X_test, Y_test, batch_size = 40)
-	print('Performance_test:', perf_test)
-	model_json = model.to_json()
-	with open("model.json", "w") as json_file :
+	history1 = model1.fit(X_train, Y_train, epochs = num_epo, batch_size = 64, validation_split=0.2)
+	history2 = model2.fit(X_train, Y_train, epochs = num_epo, batch_size = 64, validation_split=0.2)
+	perf_test1 = model1.evaluate(X_test, Y_test, batch_size = 40)
+	perf_test2 = model2.evaluate(X_test, Y_test, batch_size = 40)
+	print('Performance_test1:', perf_test1)
+	print('Performance_test2:', perf_test2)
+	model_json = model1.to_json()
+	with open("model_"+str(_Nh) + ".json", "w") as json_file :
 		json_file.write(model_json)
-	model.save_weights("model.h5")
+	model1.save_weights("model_"+str(_Nh)+".h5")
 	print("Saved model to disk")
-	return model
+	return model1, model2
 
 def main() :
 	# Load the digits classifier
@@ -60,7 +64,7 @@ def main() :
 #	hog_lst = list()
 #	num_el  = 0
 	if not trained :
-		model   = train() # model train once
+		model1, model2 = train(64) # number of hidden layer' node 64
 		trained = True
 	try :
 		while True :
@@ -70,8 +74,9 @@ def main() :
 			# Image Processing
 			gray        = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			gray_blur   = cv2.GaussianBlur(gray, (5, 5), 0)
-			ret, im_th  = cv2.threshold(gray_blur, 90, 255, cv2.THRESH_BINARY_INV)
+			ret, im_th  = cv2.threshold(gray_blur, 40, 255, cv2.THRESH_BINARY_INV)
 			img, ctrs, hier = cv2.findContours(im_th.copy(), mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
+#			cv2.imwrite("TEST.png", im_th)
 			rects = [cv2.boundingRect(ctr) for ctr in ctrs]
 #			num_el += 1
 			for rect in rects :
@@ -79,8 +84,8 @@ def main() :
 				leng = int(rect[3] * 1.6)
 				pt1  = int(rect[1] + rect[3] // 2 - leng // 2)
 				pt2  = int(rect[0] + rect[2] // 2 - leng // 2)
-				roi  = im_th[pt1:pt1+leng, pt2:pt2+leng] # roi.shape[1] < roi.shape[0]
-				if roi.shape[1] < roi.shape[0] and roi.shape[0] > 15 and roi.shape[1] > 15 :
+				roi  = im_th[pt1:pt1+leng, pt2:pt2+leng]
+				if roi.shape[1] > 1 and  roi.shape[0] > 1 :
 					cv2.rectangle(frame, (rect[0], rect[1]), (rect[0]+rect[2], rect[1]+rect[3]), (0, 255, 0), 3)
 					roi  = cv2.resize(roi, dsize=(28, 28), interpolation=cv2.INTER_AREA)
 					roi  = cv2.dilate(roi, (3, 3), iterations=1)
@@ -107,16 +112,20 @@ def main() :
 				pass
 			try :
 				for i in range(len(roi_list)) :
-					X_vec   = roi_list[i][0].reshape(1, 784)
-					hog_num = roi_list[i][1]
-					pred    = model.predict(X_vec)
-					ann_num = np.argmax(pred[0])
-#					print("Number - ", "Learning:", ann_num, "HOG:", hog_num, "i:", i)
-					if hog_num == str(ann_num) :
-						# HOG classifier and ANN classifier result comparison
+					X_vec    = roi_list[i][0].reshape(1, 784)
+					hog_num  = roi_list[i][1]
+					pred1    = model1.predict(X_vec)
+					pred2    = model2.predict(X_vec)
+					ann1_num = np.argmax(pred1[0])
+					ann2_num = np.argmax(pred2[0])
+					if hog_num == str(ann1_num) and hog_num == str(ann2_num) :
+						# HOG classifier and ANN1, ANN2 classifier result comparison
 						# If both results are same, send msg
 						rospy.loginfo(hog_num)
 						pub.publish(hog_num)
+					else :
+#						print("HOG:", hog_num, "ANN1:", ann1_num)
+						print("HOG:", hog_num, "ANN1:", ann1_num, "ANN2:", ann2_num)
 #				for i in range(len(roi_list)) :
 #					X_vector    = roi_list[i][0].reshape(1, 784)
 #					cur_num     = roi_list[i][1]
@@ -149,12 +158,6 @@ def main() :
 			# 	num_str   = str(num_class)
 			#	rospy.loginfor(num_str)
 			# 	pub.publish(num_str)
-			# rate.sleep()
-			# print("Number:", res)
-			# for ROS message
-			# number_str = str(res)
-			# rospy.loginfo(number_str)
-			# pub.publish(number_str)
 			rate.sleep()
 	except :
 		print("exit")
