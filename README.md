@@ -1,12 +1,24 @@
-# SmartFactory 과제에 사용 중인 코드 업로드
-# 1) UI(Python-PyQt)
-# 2) UR3 / Motor / PC 간 통신 및 제어프로그램(Python)
-# 3) Motor 제어 코드(OpenCM-arduino)
-# 4) 스마트팩토리 UI
-# UI 파일 변환(.ui >> .py)
-# cmd or anaconda prompt 에서
-# cd "ui_file_path" >> .ui 파일이 있는 위치로 디렉토리 변경
-# pyuic5 -x SMF_2nd_UI.ui -o SMF_2nd_UI.py
-# 원하는 이름으로 생성해주면 됨
-# UI 파일 수정: (PyQt) Designer
-# 현재 업로드 된 코드는 UI 파일의 절대 경로를 참조하고 있으므로, 경로 수정 필요함
+# smf_robot_control ROS package uploaded
+# a.Environment
+# 1) ubuntu 16.04.6
+# 2) ROS : kinetic kame
+# 3) UR3 software : 3.12(Require > 3.7)
+# 4) UR ROS pakcage : ur_robot_driver
+
+# Error MSG
+# Unable to identify and set of controllers that can actuate ~
+# open referenced "controllers.yaml"
+# Edit action_ns "follow_joint_trajectory" to "scaled_pos_traj_controller/follow_joint_trajectory"
+# controllers.yaml file is located in /ROS_PACKAGE_DIRECTORY/src/fmauch_universal_robot/ur3_moveit_config/config/controllers.yaml
+# ex) ~/catkin_ws/src/fmauch_universal_robot/ur3_moveit_config/config/controllers.yaml
+
+# Network Setup
+# UR3 IP Address : 192.168.0.9
+# HOST IP Address setting : 192.168.0.10 / 255.255.255.0 / 192.168.0.1
+
+# Execution Sequence
+# On UR3 Teach-pendent, execution "remote_control" file
+# On HOST PC, in terminal
+# roslaunch ur_robot_driver ur3_bringup.launch robot_ip:=192.168.0.9
+# roslaunch ur3_moveit_config ur3_moveit_planning_execution.launch
+# rosrun ~
