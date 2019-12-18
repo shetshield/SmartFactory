@@ -1,4 +1,4 @@
-# smf_robot_control ROS package uploaded
+# smf_robot_control ROS package uploaded - 191218
 # a.Environment
 # 1) ubuntu 16.04.6
 # 2) ROS : kinetic kame
